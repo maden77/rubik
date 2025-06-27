@@ -1,0 +1,280 @@
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #45a049;
+    --background-color: #f0f0f0;
+    --text-color: #333;
+    --cube-bg: #ffffff;
+    --control-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --primary-color: #2E7D32;
+    --secondary-color: #1B5E20;
+    --background-color: #121212;
+    --text-color: #f0f0f0;
+    --cube-bg: #1e1e1e;
+    --control-bg: #2d2d2d;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    background-color: var(--control-bg);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.game-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.level-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: var(--control-bg);
+    color: var(--text-color);
+}
+
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+}
+
+#cube-container {
+    perspective: 1000px;
+    margin: 20px auto;
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--cube-bg);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.cube {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+    transform: rotateX(-20deg) rotateY(-30deg);
+}
+
+.face {
+    position: absolute;
+    display: grid;
+    border: 2px solid #000;
+    box-sizing: border-box;
+    transition: transform 0.3s;
+}
+
+.sticker {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.sticker:hover {
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.controls-3d {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.controls-3d > div {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-3d {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-3d:hover {
+    background-color: var(--secondary-color);
+}
+
+.color-selector {
+    margin: 20px auto;
+    max-width: 600px;
+    background-color: var(--control-bg);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.color-option {
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-grow: 1;
+    text-align: center;
+    border: 2px solid transparent;
+}
+
+.color-option.selected {
+    border-color: var(--primary-color);
+    font-weight: bold;
+}
+
+#color-picker {
+    width: 100%;
+    height: 40px;
+    cursor: pointer;
+}
+
+.tutorial {
+    background-color: var(--control-bg);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.tutorial h3 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.tutorial p {
+    margin-bottom: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+}
+
+.stats {
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .game-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-group {
+        justify-content: center;
+    }
+    
+    .cube {
+        transform: rotateX(-10deg) rotateY(-15deg);
+    }
+    
+    footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .stats {
+        text-align: center;
+    }
+}
+
+/* Animation for solved cube */
+@keyframes celebrate {
+    0% { transform: rotateX(0) rotateY(0) scale(1); }
+    25% { transform: rotateX(20deg) rotateY(20deg) scale(1.1); }
+    50% { transform: rotateX(0) rotateY(0) scale(1); }
+    75% { transform: rotateX(-20deg) rotateY(-20deg) scale(1.1); }
+    100% { transform: rotateX(0) rotateY(0) scale(1); }
+}
+
+.solved {
+    animation: celebrate 2s ease infinite;
+}

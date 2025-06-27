@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rubik's Cube 3D Interaktif</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#263238">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Rubik's Cube 3D Ultimate</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --rubik-green: #009b48;
@@ -12,780 +17,855 @@
             --rubik-orange: #ff5800;
             --rubik-yellow: #ffd500;
             --rubik-white: #ffffff;
-            --rubik-black: #111111;
-            --rubik-gray: #555555;
+            --rubik-black: #212121;
+            --rubik-gray: #757575;
+            --rubik-highlight: rgba(255, 255, 255, 0.2);
+        }
+        {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            touch-action: none;
+            font-family: 'Roboto', sans-serif;
+            background-color: #263238;
+            color: white;
+            overscroll-behavior-y: none;
             overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            user-select: none;
         }
 
-        .container {
+        #app {
+            height: 100%;
             width: 100%;
-            max-width: 800px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
-
         header {
+            padding: 12px;
+            background-color: #263238;
             text-align: center;
-            margin-bottom: 20px;
-            width: 100%;
+            position: relative;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 4px;
         }
 
-        .game-info {
+        .stats {
             display: flex;
             justify-content: space-around;
-            background-color: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            width: 100%;
-            margin-bottom: 20px;
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
-        #cube-scene {
-            width: 300px;
-            height: 300px;
-            perspective: 1000px;
-            margin: 20px auto;
+        #cube-container {
+            flex: 1;
             position: relative;
+            overflow: hidden;
+            perspective: 1200px;
             touch-action: none;
         }
-
-        .cube {
+          #cube-scene {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transform: rotateX(-20deg) rotateY(-30deg);
-            transition: transform 0.3s ease;
+            transition: transform 0.1s linear;
+        }
+
+        .cube {
+            position: absolute;
+            width: 60vmin;
+            height: 60vmin;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transform: translate3d(-50%, -50%, 0) rotateX(-20deg) rotateY(-30deg);
         }
 
         .face {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background-color: var(--rubik-black);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 3px;
-            padding: 3px;
-            box-sizing: border-box;
-            border-radius: 5px;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            pointer-events: none;
+        }
+            .cubie {
+            position: absolute;
+            width: 33.33%;
+            height: 33.33%;
+            transform-style: preserve-3d;
+            pointer-events: none;
         }
 
         .sticker {
-            border-radius: 3px;
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-
-        .sticker.active {
-            transform: scale(0.95);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        /* Posisi masing-masing sisi */
-        .front  { transform: translateZ(50px); }
-        .back   { transform: rotateY(180deg) translateZ(50px); }
-        .right  { transform: rotateY(90deg) translateZ(50px); }
-        .left   { transform: rotateY(-90deg) translateZ(50px); }
-        .top    { transform: rotateX(90deg) translateZ(50px); }
-        .bottom { transform: rotateX(-90deg) translateZ(50px); }
-
-        /* Warna sticker */
-        .front .sticker  { background-color: var(--rubik-green); }
-        .back .sticker   { background-color: var(--rubik-blue); }
-        .right .sticker  { background-color: var(--rubik-red); }
-        .left .sticker   { background-color: var(--rubik-orange); }
-        .top .sticker    { background-color: var(--rubik-white); }
-        .bottom .sticker { background-color: var(--rubik-yellow); }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-            width: 100%;
-        }
-
-        .btn {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #45a049;
-        }
-
-        .move-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .move-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .move-btn {
-            width: 50px;
-            height: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #333;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .move-btn:hover {
-            background-color: #555;
-        }
-
-        footer {
-            margin-top: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stats {
-            background-color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .rotation-controls {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            width: 100%;
+            height: 100%;
+            border-radius: 3px;
+            box-sizing: border-box;
+            transform-style: preserve-3d;
+            transition: transform 0.05s, box-shadow 0.05s;
+            backface-visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Warna stiker */
+        .sticker.front { background-color: var(--rubik-green); border: 1px solid rgba(0, 0, 0, 0.3); }
+        .sticker.back { background-color: var(--rubik-blue); border: 1px solid rgba(0, 0, 0, 0.3); }
+        .sticker.right { background-color: var(--rubik-red); border: 1px solid rgba(0, 0, 0, 0.3); }
+        .sticker.left { background-color: var(--rubik-orange); border: 1px solid rgba(0, 0, 0, 0.3); }
+        .sticker.up { background-color: var(--rubik-white); border: 1px solid rgba(0, 0, 0, 0.2); }
+        .sticker.down { background-color: var(--rubik-yellow); border: 1px solid rgba(0, 0, 0, 0.3); }
+             /* Highlight saat dipilih */
+        .sticker.highlight {
+            box-shadow: inset 0 0 15px var(--rubik-highlight);
+            transform: scale(0.98);
             z-index: 10;
         }
 
-        .rotate-btn {
+        /* Kontrol */
+        .controls {
+            padding: 12px;
+            background-color: #263238;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            background-color: #37474f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
+            background-color: #455a64;
+            transform: scale(0.96);
+        }
+              .btn-primary {
+            background-color: #009688;
+        }
+
+        .btn-primary:active {
+            background-color: #00897b;
+        }
+
+        /* Layer controls */
+        .layer-controls {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .layer-btn {
             width: 40px;
             height: 40px;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(55, 71, 79, 0.8);
             color: white;
             border: none;
             border-radius: 50%;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
             cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
         }
 
-        @media (max-width: 600px) {
-            #cube-scene {
-                width: 250px;
-                height: 250px;
-            }
-            
-            .face {
-                width: 83.33px;
-                height: 83.33px;
-            }
-            
-            .front  { transform: translateZ(41.66px); }
-            .back   { transform: rotateY(180deg) translateZ(41.66px); }
-            .right  { transform: rotateY(90deg) translateZ(41.66px); }
-            .left   { transform: rotateY(-90deg) translateZ(41.66px); }
-            .top    { transform: rotateX(90deg) translateZ(41.66px); }
-            .bottom { transform: rotateX(-90deg) translateZ(41.66px); }
+        .layer-btn:active {
+            background-color: rgba(69, 90, 100, 0.9);
+            transform: scale(0.9);
+        }
+            /* Rotasi kamera */
+        .camera-controls {
+            position: absolute;
+            right: 15px;
+            bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+            pointer-events: none;
         }
 
-        /* Animasi putar */
+        .camera-btn {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(55, 71, 79, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .camera-btn:active {
+            background-color: rgba(69, 90, 100, 0.9);
+            transform: scale(0.9);
+        }
+
+        /* Animasi */
         @keyframes rotate-face {
             0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
             100% { transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) rotateZ(var(--rotate-z)); }
         }
 
         .rotating {
-            animation: rotate-face 0.3s forwards;
+            animation: rotate-face 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        }
+           /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .overlay h2 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .overlay p {
+            margin-bottom: 20px;
+            max-width: 300px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Responsif */
+        @media (max-width: 500px) {
+            .cube {
+                width: 80vmin;
+                height: 80vmin;
+            }
+            
+            .controls {
+                padding: 10px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
         }
     </style>
-</head>
+    </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Rubik's Cube 3D Interaktif</h1>
-            <div class="game-info">
-                <div id="timer">00:00</div>
+    <div id="app">
+        <div class="header">
+            <h1>Rubik's Cube 3D Ultimate</h1>
+            <div class="stats">
+                <div id="timer">00:00.00</div>
                 <div id="moves">0 moves</div>
             </div>
-        </header>
+        </div>
         
-        <div id="cube-scene">
-            <div class="cube" id="cube">
-                <div class="face front" id="front">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
-                </div>
-                <div class="face back" id="back">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
-                </div>
-                <div class="face right" id="right">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
-                </div>
-                <div class="face left" id="left">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
-                </div>
-                <div class="face top" id="top">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
-                </div>
-                <div class="face bottom" id="bottom">
-                    <div class="sticker" data-row="0" data-col="0"></div>
-                    <div class="sticker" data-row="0" data-col="1"></div>
-                    <div class="sticker" data-row="0" data-col="2"></div>
-                    <div class="sticker" data-row="1" data-col="0"></div>
-                    <div class="sticker" data-row="1" data-col="1"></div>
-                    <div class="sticker" data-row="1" data-col="2"></div>
-                    <div class="sticker" data-row="2" data-col="0"></div>
-                    <div class="sticker" data-row="2" data-col="1"></div>
-                    <div class="sticker" data-row="2" data-col="2"></div>
+        <div id="cube-container">
+            <div id="cube-scene">
+                <div class="cube" id="cube">
+                    <!-- Cubies akan di-generate oleh JavaScript -->
                 </div>
             </div>
-
-            <div class="rotation-controls">
-                <button class="rotate-btn" id="rotate-up">↑</button>
+            
+            <div class="layer-controls">
+                <button class="layer-btn" id="layer-up">U</button>
+                <button class="layer-btn" id="layer-down">D</button>
+                <button class="layer-btn" id="layer-left">L</button>
+                <button class="layer-btn" id="layer-right">R</button>
+                <button class="layer-btn" id="layer-front">F</button>
+                <button class="layer-btn" id="layer-back">B</button>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="camera-btn" id="camera-up">↑</button>
                 <div style="display: flex;">
-                    <button class="rotate-btn" id="rotate-left">←</button>
-                    <button class="rotate-btn" id="rotate-reset">↻</button>
-                    <button class="rotate-btn" id="rotate-right">→</button>
+                    <button class="camera-btn" id="camera-left">←</button>
+                    <button class="camera-btn" id="camera-reset">↻</button>
+                    <button class="camera-btn" id="camera-right">→</button>
                 </div>
-                <button class="rotate-btn" id="rotate-down">↓</button>
+                <button class="camera-btn" id="camera-down">↓</button>
             </div>
         </div>
-        
-        <div class="controls">
-            <button id="shuffle" class="btn">Acak</button>
-            <button id="solve" class="btn">Selesaikan</button>
-            <button id="reset" class="btn">Reset</button>
+           <div class="controls">
+            <button id="btn-shuffle" class="btn">Acak</button>
+            <button id="btn-solve" class="btn btn-primary">Selesaikan</button>
+            <button id="btn-reset" class="btn">Reset</button>
         </div>
-        
-        <div class="move-controls">
-            <div class="move-row">
-                <button class="move-btn" data-move="U">U</button>
-            </div>
-            <div class="move-row">
-                <button class="move-btn" data-move="L">L</button>
-                <button class="move-btn" data-move="F">F</button>
-                <button class="move-btn" data-move="R">R</button>
-                <button class="move-btn" data-move="B">B</button>
-            </div>
-            <div class="move-row">
-                <button class="move-btn" data-move="D">D</button>
-            </div>
+    </div>
+
+    <div class="overlay" id="install-prompt">
+        <h2>Instal Aplikasi</h2>
+        <p>Untuk pengalaman terbaik, instal aplikasi ini ke perangkat Anda dan mainkan dalam mode layar penuh.</p>
+        <div class="btn-group">
+            <button id="btn-install" class="btn btn-primary">Instal Sekarang</button>
+            <button id="btn-continue" class="btn">Lanjutkan di Browser</button>
         </div>
-        
-        <footer>
-            <button id="show-help" class="btn">Bantuan</button>
-            <div class="stats">
-                Best: <span id="best-time">-</span>
-            </div>
-        </footer>
+    </div>
+
+    <div class="overlay" id="solved-message" style="display: none;">
+        <h2>Selamat!</h2>
+        <p id="solve-stats">Anda menyelesaikan kubus dalam 0 gerakan dan waktu 00:00.00!</p>
+        <button id="btn-close-solved" class="btn btn-primary">Tutup</button>
     </div>
 
     <script>
-        // Cube state
-        const cubeState = {
-            front: Array(3).fill().map(() => Array(3).fill('front')),
-            back: Array(3).fill().map(() => Array(3).fill('back')),
-            right: Array(3).fill().map(() => Array(3).fill('right')),
-            left: Array(3).fill().map(() => Array(3).fill('left')),
-            top: Array(3).fill().map(() => Array(3).fill('top')),
-            bottom: Array(3).fill().map(() => Array(3).fill('bottom'))
+        // Konfigurasi Kubus
+        const CUBE_SIZE = 3;
+        const LAYER_NAMES = ['up', 'down', 'left', 'right', 'front', 'back'];
+        const COLORS = {
+            up: 'white',
+            down: 'yellow',
+            left: 'orange',
+            right: 'red',
+            front: 'green',
+            back: 'blue'
         };
 
-        // Game state
+        // State Game
+        let cubeState = {};
         let moveCount = 0;
         let startTime = null;
         let timerInterval = null;
         let bestTime = localStorage.getItem('rubik-best-time') || null;
+        let bestMoves = localStorage.getItem('rubik-best-moves') || null;
+        let isRotating = false;
+        let cameraX = -20;
+        let cameraY = -30;
+        let cameraZ = 0;
         let isDragging = false;
-        let startX, startY;
-        let rotateX = -20, rotateY = -30;
-        let selectedFace = null;
-        let selectedRow = null;
-        let selectedCol = null;
+        let dragStartX, dragStartY;
+        let selectedLayer = null;
+        let selectedCubies = [];
+        let deferredPrompt = null;
 
-        // Initialize
+        // Inisialisasi
         document.addEventListener('DOMContentLoaded', () => {
+            initCube();
             setupEventListeners();
-            updateBestTimeDisplay();
-            updateCubeDisplay();
+            updateStats();
+            
+            // Cek jika sudah diinstall sebagai PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                document.getElementById('install-prompt').style.display = 'none';
+            }
+            
+            // Tangkap event beforeinstallprompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('install-prompt').style.display = 'flex';
+            });
         });
+        function initCube() {
+            const cubeElement = document.getElementById('cube');
+            cubeElement.innerHTML = '';
+            
+            // Inisialisasi state kubus
+            cubeState = {};
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                cubeState[x] = {};
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    cubeState[x][y] = {};
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        // Skip cubie tengah (tidak terlihat)
+                        if (x === 1 && y === 1 && z === 1) continue;
+                        
+                        const cubie = document.createElement('div');
+                        cubie.className = 'cubie';
+                        cubie.dataset.x = x;
+                        cubie.dataset.y = y;
+                        cubie.dataset.z = z;
+                        
+                        // Tambahkan stiker untuk setiap sisi yang terlihat
+                        if (x === 0) addSticker(cubie, 'left');
+                        if (x === CUBE_SIZE - 1) addSticker(cubie, 'right');
+                        if (y === 0) addSticker(cubie, 'down');
+                        if (y === CUBE_SIZE - 1) addSticker(cubie, 'up');
+                        if (z === 0) addSticker(cubie, 'back');
+                        if (z === CUBE_SIZE - 1) addSticker(cubie, 'front');
+                        
+                        // Posisikan cubie
+                        const posX = (x - 1) * 100;
+                        const posY = (1 - y) * 100;
+                        const posZ = (z - 1) * 100;
+                        cubie.style.transform = `translate3d(${posX}%, ${posY}%, ${posZ}%)`;
+                        
+                        cubeElement.appendChild(cubie);
+                             // Simpan state awal
+                        cubeState[x][y][z] = {
+                            x, y, z,
+                            colors: {
+                                left: x === 0 ? 'left' : null,
+                                right: x === CUBE_SIZE - 1 ? 'right' : null,
+                                down: y === 0 ? 'down' : null,
+                                up: y === CUBE_SIZE - 1 ? 'up' : null,
+                                back: z === 0 ? 'back' : null,
+                                front: z === CUBE_SIZE - 1 ? 'front' : null
+                            }
+                        };
+                    }
+                }
+            }
+            
+            updateCubeRotation();
+        }
+
+        function addSticker(cubie, face) {
+            const sticker = document.createElement('div');
+            sticker.className = `sticker ${face}`;
+            sticker.dataset.face = face;
+            
+            // Posisikan stiker di sisi yang benar
+            switch (face) {
+                case 'front': sticker.style.transform = 'translateZ(50%) rotateY(0deg)'; break;
+                case 'back': sticker.style.transform = 'translateZ(-50%) rotateY(180deg)'; break;
+                case 'right': sticker.style.transform = 'translateX(50%) rotateY(90deg)'; break;
+                case 'left': sticker.style.transform = 'translateX(-50%) rotateY(-90deg)'; break;
+                case 'up': sticker.style.transform = 'translateY(-50%) rotateX(90deg)'; break;
+                case 'down': sticker.style.transform = 'translateY(50%) rotateX(-90deg)'; break;
+            }
+            
+            cubie.appendChild(sticker);
+        }
 
         function setupEventListeners() {
-            const cubeElement = document.getElementById('cube');
-            const scene = document.getElementById('cube-scene');
-
-            // Control buttons
-            document.getElementById('shuffle').addEventListener('click', shuffleCube);
-            document.getElementById('solve').addEventListener('click', solveCube);
-            document.getElementById('reset').addEventListener('click', resetCube);
-            document.getElementById('show-help').addEventListener('click', showHelp);
-
-            // Rotation controls
-            document.getElementById('rotate-up').addEventListener('click', () => rotateView('up'));
-            document.getElementById('rotate-down').addEventListener('click', () => rotateView('down'));
-            document.getElementById('rotate-left').addEventListener('click', () => rotateView('left'));
-            document.getElementById('rotate-right').addEventListener('click', () => rotateView('right'));
-            document.getElementById('rotate-reset').addEventListener('click', () => rotateView('reset'));
-
-            // Move buttons
-            document.querySelectorAll('.move-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    rotateFace(this.getAttribute('data-move'));
-                });
+            // Tombol kontrol
+            document.getElementById('btn-shuffle').addEventListener('click', shuffleCube);
+            document.getElementById('btn-solve').addEventListener('click', solveCube);
+            document.getElementById('btn-reset').addEventListener('click', resetCube);
+            document.getElementById('btn-close-solved').addEventListener('click', () => {
+                document.getElementById('solved-message').style.display = 'none';
             });
-
-            // Keyboard controls
+                // Tombol instalasi
+            document.getElementById('btn-install').addEventListener('click', installApp);
+            document.getElementById('btn-continue').addEventListener('click', () => {
+                document.getElementById('install-prompt').style.display = 'none';
+            });
+            
+            // Kontrol layer
+            document.getElementById('layer-up').addEventListener('click', () => rotateLayer('up', 1));
+            document.getElementById('layer-down').addEventListener('click', () => rotateLayer('down', 1));
+            document.getElementById('layer-left').addEventListener('click', () => rotateLayer('left', 1));
+            document.getElementById('layer-right').addEventListener('click', () => rotateLayer('right', 1));
+            document.getElementById('layer-front').addEventListener('click', () => rotateLayer('front', 1));
+            document.getElementById('layer-back').addEventListener('click', () => rotateLayer('back', 1));
+            
+            // Kontrol kamera
+            document.getElementById('camera-up').addEventListener('click', () => rotateCamera('up'));
+            document.getElementById('camera-down').addEventListener('click', () => rotateCamera('down'));
+            document.getElementById('camera-left').addEventListener('click', () => rotateCamera('left'));
+            document.getElementById('camera-right').addEventListener('click', () => rotateCamera('right'));
+            document.getElementById('camera-reset').addEventListener('click', () => rotateCamera('reset'));
+            
+            // Interaksi sentuh/mouse
+            const container = document.getElementById('cube-container');
+            
+            container.addEventListener('touchstart', handleTouchStart, { passive: false });
+            container.addEventListener('touchmove', handleTouchMove, { passive: false });
+            container.addEventListener('touchend', handleTouchEnd);
+            
+            container.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+               // Keyboard controls
             document.addEventListener('keydown', (e) => {
-                const key = e.key.toUpperCase();
-                const moves = ['F', 'B', 'R', 'L', 'U', 'D'];
+                if (isRotating) return;
                 
-                if (moves.includes(key)) {
-                    rotateFace(key);
+                const key = e.key.toUpperCase();
+                const moves = {
+                    'U': () => rotateLayer('up', 1),
+                    'D': () => rotateLayer('down', 1),
+                    'L': () => rotateLayer('left', 1),
+                    'R': () => rotateLayer('right', 1),
+                    'F': () => rotateLayer('front', 1),
+                    'B': () => rotateLayer('back', 1),
+                    'ARROWUP': () => rotateCamera('up'),
+                    'ARROWDOWN': () => rotateCamera('down'),
+                    'ARROWLEFT': () => rotateCamera('left'),
+                    'ARROWRIGHT': () => rotateCamera('right')
+                };
+                
+                if (moves[key]) {
+                    moves[key]();
                     e.preventDefault();
                 }
             });
-
-            // Touch/mouse events for cube interaction
-            scene.addEventListener('mousedown', startDrag);
-            scene.addEventListener('touchstart', handleTouchStart, { passive: false });
-            
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            
-            document.addEventListener('mouseup', endDrag);
-            document.addEventListener('touchend', endDrag);
-
-            // Sticker selection
-            document.querySelectorAll('.sticker').forEach(sticker => {
-                sticker.addEventListener('mousedown', handleStickerClick);
-                sticker.addEventListener('touchstart', handleStickerClick);
-            });
         }
-
-        function startDrag(e) {
-            e.preventDefault();
-            isDragging = true;
-            startX = e.clientX || e.touches[0].clientX;
-            startY = e.clientY || e.touches[0].clientY;
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install prompt');
+                    } else {
+                        console.log('User dismissed install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('install-prompt').style.display = 'none';
+                });
+            }
         }
 
         function handleTouchStart(e) {
-            if (e.target.classList.contains('sticker')) {
-                handleStickerClick(e);
-                return;
+            if (isRotating) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (element && element.classList.contains('sticker')) {
+                selectLayer(element);
+            } else {
+                startDrag(touch.clientX, touch.clientY);
             }
-            startDrag(e);
         }
 
         function handleTouchMove(e) {
-            if (selectedFace) {
-                // Handle layer rotation
-                return;
-            }
-            drag(e);
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
+            if (isRotating) return;
             e.preventDefault();
             
-            const x = e.clientX || e.touches[0].clientX;
-            const y = e.clientY || e.touches[0].clientY;
+            const touch = e.touches[0];
             
-            const deltaX = x - startX;
-            const deltaY = y - startY;
+            if (selectedLayer) {
+                // Hitung arah putar layer
+                const deltaX = touch.clientX - dragStartX;
+                const deltaY = touch.clientY - dragStartY;
+                
+                // Jika pergeseran cukup besar, putar layer
+                if (Math.abs(deltaX) > 30 || Math.abs(deltaY) > 30) {
+                    const direction = Math.abs(deltaX) > Math.abs(deltaY) 
+                        ? (deltaX > 0 ? 1 : -1) 
+                        : (deltaY > 0 ? -1 : 1);
+                    
+                    rotateLayer(selectedLayer, direction);
+                    endDrag();
+                }
+            } else {
+                const deltaX = touch.clientX - dragStartX;
+                const deltaY = touch.clientY - dragStartY;
+                
+                cameraY += deltaX * 0.5;
+                cameraX -= deltaY * 0.5;
+                
+                updateCubeRotation();
+                
+                dragStartX = touch.clientX;
+                dragStartY = touch.clientY;
+            }
+                                           }
+        function handleTouchEnd() {
+            endDrag();
+        }
+
+        function handleMouseDown(e) {
+            if (isRotating) return;
             
-            rotateY += deltaX * 0.5;
-            rotateX -= deltaY * 0.5;
+            if (e.target.classList.contains('sticker')) {
+                selectLayer(e.target);
+            } else {
+                startDrag(e.clientX, e.clientY);
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging || isRotating) return;
             
-            updateCubeRotation();
-            
-            startX = x;
-            startY = y;
+            if (selectedLayer) {
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                
+                if (Math.abs(deltaX) > 30 || Math.abs(deltaY) > 30) {
+                    const direction = Math.abs(deltaX) > Math.abs(deltaY) 
+                        ? (deltaX > 0 ? 1 : -1) 
+                        : (deltaY > 0 ? -1 : 1);
+                    
+                    rotateLayer(selectedLayer, direction);
+                    endDrag();
+                }
+            } else {
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                
+                cameraY += deltaX * 0.5;
+                cameraX -= deltaY * 0.5;
+                
+                updateCubeRotation();
+                
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            }
+        }
+
+        function handleMouseUp() {
+            endDrag();
+        }
+
+        function startDrag(x, y) {
+            isDragging = true;
+            dragStartX = x;
+            dragStartY = y;
         }
 
         function endDrag() {
             isDragging = false;
-            
-            // Jika ada stiker yang dipilih, coba putar layer
-            if (selectedFace !== null && selectedRow !== null) {
-                // Tentukan arah putaran berdasarkan pergerakan mouse/touch
-                // Implementasikan logika rotasi layer di sini
-                rotateLayer(selectedFace, selectedRow, 1); // 1 untuk clockwise
-                
-                // Reset seleksi
-                resetSelection();
-            }
+            resetSelection();
         }
 
-        function handleStickerClick(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const sticker = e.target;
-            const face = sticker.parentElement.id;
-            const row = parseInt(sticker.dataset.row);
-            const col = parseInt(sticker.dataset.col);
-            
-            // Reset seleksi sebelumnya
+        function selectLayer(sticker) {
             resetSelection();
             
-            // Tandai stiker yang dipilih
-            selectedFace = face;
-            selectedRow = row;
-            selectedCol = col;
+            selectedLayer = sticker.dataset.face;
+            sticker.classList.add('highlight');
             
-            // Highlight stiker dan layer yang dipilih
-            sticker.classList.add('active');
-            
-            // Mulai tracking drag untuk rotasi layer
-            startDrag(e);
+            // Highlight semua stiker di layer yang sama
+            const stickers = document.querySelectorAll(`.sticker[data-face="${selectedLayer}"]`);
+            stickers.forEach(s => s.classList.add('highlight'));
         }
 
         function resetSelection() {
-            document.querySelectorAll('.sticker').forEach(s => s.classList.remove('active'));
-            selectedFace = null;
-            selectedRow = null;
-            selectedCol = null;
+            if (selectedLayer) {
+                const stickers = document.querySelectorAll(`.sticker[data-face="${selectedLayer}"]`);
+                stickers.forEach(s => s.classList.remove('highlight'));
+                selectedLayer = null;
+            }
+        }
+        function rotateLayer(layer, direction) {
+            if (isRotating) return;
+            isRotating = true;
+            
+            if (!startTime) startTimer();
+            
+            // Dapatkan semua cubie di layer ini
+            const cubies = [];
+            const faceElements = [];
+            
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        if (isInLayer(x, y, z, layer)) {
+                            cubies.push(cubeState[x][y][z]);
+                            
+                            const cubieElement = document.querySelector(`.cubie[data-x="${x}"][data-y="${y}"][data-z="${z}"]`);
+                            if (cubieElement) {
+                                faceElements.push(cubieElement);
+                                cubieElement.style.zIndex = '10';
+                            }
+                        }
+                    }
+                }
+            }
+             // Animasi rotasi
+            const duration = 300; // ms
+            const startTime = performance.now();
+            
+            function animate(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const angle = progress * Math.PI / 2 * direction;
+                
+                faceElements.forEach(cubie => {
+                    switch (layer) {
+                        case 'up':
+                        case 'down':
+                            cubie.style.transform = `translate3d(${cubie.dataset.x - 1}00%, ${1 - cubie.dataset.y}00%, ${cubie.dataset.z - 1}00%) rotateX(${layer === 'up' ? angle : -angle})`;
+                            break;
+                        case 'left':
+                        case 'right':
+                            cubie.style.transform = `translate3d(${cubie.dataset.x - 1}00%, ${1 - cubie.dataset.y}00%, ${cubie.dataset.z - 1}00%) rotateY(${layer === 'right' ? angle : -angle})`;
+                            break;
+                        case 'front':
+                        case 'back':
+                            cubie.style.transform = `translate3d(${cubie.dataset.x - 1}00%, ${1 - cubie.dataset.y}00%, ${cubie.dataset.z - 1}00%) rotateZ(${layer === 'front' ? angle : -angle})`;
+                            break;
+                    }
+                });
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Update state setelah animasi selesai
+                    updateCubeState(layer, direction);
+                    faceElements.forEach(cubie => cubie.style.zIndex = '');
+                    isRotating = false;
+                    moveCount++;
+                    updateStats();
+                    
+                    if (isSolved()) {
+                        showSolvedMessage();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animate);
         }
 
-        function rotateView(direction) {
+        function isInLayer(x, y, z, layer) {
+            switch (layer) {
+                case 'up': return y === CUBE_SIZE - 1;
+                case 'down': return y === 0;
+                case 'left': return x === 0;
+                case 'right': return x === CUBE_SIZE - 1;
+                case 'front': return z === CUBE_SIZE - 1;
+                case 'back': return z === 0;
+                default: return false;
+            }
+        }
+
+        function updateCubeState(layer, direction) {
+            // Clone state saat ini
+            const newState = JSON.parse(JSON.stringify(cubeState));
+                 // Putar layer dalam state
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        if (isInLayer(x, y, z, layer)) {
+                            const newPos = getNewPosition(x, y, z, layer, direction);
+                            newState[newPos.x][newPos.y][newPos.z] = {
+                                ...cubeState[x][y][z],
+                                x: newPos.x,
+                                y: newPos.y,
+                                z: newPos.z
+                            };
+                            
+                            // Update warna sisi yang berubah
+                            if (layer === 'up' || layer === 'down') {
+                                rotateColors(newState[newPos.x][newPos.y][newPos.z].colors, ['front', 'right', 'back', 'left'], direction);
+                            } else if (layer === 'left' || layer === 'right') {
+                                rotateColors(newState[newPos.x][newPos.y][newPos.z].colors, ['up', 'front', 'down', 'back'], direction * (layer === 'left' ? -1 : 1));
+                            } else if (layer === 'front' || layer === 'back') {
+                                rotateColors(newState[newPos.x][newPos.y][newPos.z].colors, ['up', 'left', 'down', 'right'], direction * (layer === 'front' ? 1 : -1));
+                            }
+                        }
+                    }
+                }
+            }
+            
+            cubeState = newState;
+        }
+
+        function getNewPosition(x, y, z, layer, direction) {
+            const center = (CUBE_SIZE - 1) / 2;
+            
+            switch (layer) {
+                case 'up':
+                case 'down':
+                    // Rotasi di sekitar sumbu Y
+                    const relX = x - center;
+                    const relZ = z - center;
+                    const newRelX = direction > 0 ? -relZ : relZ;
+                    const newRelZ = direction > 0 ? relX : -relX;
+                    return { x: Math.round(newRelX + center), y, z: Math.round(newRelZ + center) };
+                
+                case 'left':
+                case 'right':
+                    // Rotasi di sekitar sumbu X
+                    const relY = y - center;
+                    const relZ2 = z - center;
+                    const newRelY = direction > 0 ? relZ2 : -relZ2;
+                    const newRelZ2 = direction > 0 ? -relY : relY;
+                    return { x, y: Math.round(newRelY + center), z: Math.round(newRelZ2 + center) };
+                
+                case 'front':
+                case 'back':
+                    // Rotasi di sekitar sumbu Z
+                    const relX2 = x - center;
+                    const relY2 = y - center;
+                    const newRelX2 = direction > 0 ? relY2 : -relY2;
+                    const newRelY2 = direction > 0 ? -relX2 : relX2;
+                    return { x: Math.round(newRelX2 + center), y: Math.round(newRelY2 + center), z };
+                
+                default:
+                    return { x, y, z };
+            }
+        }
+        function rotateColors(colors, faces, direction) {
+            const temp = {};
+            const n = faces.length;
+            
+            // Simpan warna sementara
+            faces.forEach((face, i) => {
+                temp[face] = colors[face];
+            });
+            
+            // Putar warna
+            faces.forEach((face, i) => {
+                const newIndex = (i + direction + n) % n;
+                colors[face] = temp[faces[newIndex]];
+            });
+        }
+
+        function rotateCamera(direction) {
             switch (direction) {
-                case 'up': rotateX -= 15; break;
-                case 'down': rotateX += 15; break;
-                case 'left': rotateY -= 15; break;
-                case 'right': rotateY += 15; break;
-                case 'reset': 
-                    rotateX = -20; 
-                    rotateY = -30;
+                case 'up': cameraX -= 15; break;
+                case 'down': cameraX += 15; break;
+                case 'left': cameraY -= 15; break;
+                case 'right': cameraY += 15; break;
+                case 'reset':
+                    cameraX = -20;
+                    cameraY = -30;
+                    cameraZ = 0;
                     break;
             }
+            
             updateCubeRotation();
         }
 
         function updateCubeRotation() {
-            document.getElementById('cube').style.transform = 
-                `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        }
-
-        function rotateFace(face) {
-            if (!startTime) startTimer();
-            
-            // Clone current state
-            const newState = JSON.parse(JSON.stringify(cubeState));
-            
-            // Perform rotation
-            switch (face) {
-                case 'F': // Front clockwise
-                    // Rotate front face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.front[j][2-i] = cubeState.front[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.top[2][i] = cubeState.left[2-i][2];
-                        newState.right[i][0] = cubeState.top[2][i];
-                        newState.bottom[0][2-i] = cubeState.right[i][0];
-                        newState.left[i][2] = cubeState.bottom[0][i];
-                    }
-                    break;
-                    
-                case 'B': // Back clockwise
-                    // Rotate back face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.back[j][2-i] = cubeState.back[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.top[0][2-i] = cubeState.right[i][2];
-                        newState.left[i][0] = cubeState.top[0][i];
-                        newState.bottom[2][i] = cubeState.left[2-i][0];
-                        newState.right[i][2] = cubeState.bottom[2][i];
-                    }
-                    break;
-                    
-                case 'R': // Right clockwise
-                    // Rotate right face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.right[j][2-i] = cubeState.right[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.top[i][2] = cubeState.front[i][2];
-                        newState.back[2-i][0] = cubeState.top[i][2];
-                        newState.bottom[i][2] = cubeState.back[2-i][0];
-                        newState.front[i][2] = cubeState.bottom[i][2];
-                    }
-                    break;
-                    
-                case 'L': // Left clockwise
-                    // Rotate left face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.left[j][2-i] = cubeState.left[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.top[i][0] = cubeState.back[2-i][2];
-                        newState.front[i][0] = cubeState.top[i][0];
-                        newState.bottom[i][0] = cubeState.front[i][0];
-                        newState.back[2-i][2] = cubeState.bottom[i][0];
-                    }
-                    break;
-                    
-                case 'U': // Up clockwise
-                    // Rotate top face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.top[j][2-i] = cubeState.top[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.front[0][i] = cubeState.right[0][i];
-                        newState.left[0][i] = cubeState.front[0][i];
-                        newState.back[0][i] = cubeState.left[0][i];
-                        newState.right[0][i] = cubeState.back[0][i];
-                    }
-                    break;
-                    
-                case 'D': // Down clockwise
-                    // Rotate bottom face
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            newState.bottom[j][2-i] = cubeState.bottom[i][j];
-                        }
-                    }
-                    
-                    // Rotate adjacent edges
-                    for (let i = 0; i < 3; i++) {
-                        newState.front[2][i] = cubeState.left[2][i];
-                        newState.right[2][i] = cubeState.front[2][i];
-                        newState.back[2][i] = cubeState.right[2][i];
-                        newState.left[2][i] = cubeState.back[2][i];
-                    }
-                    break;
-            }
-            
-            // Update cube state
-            Object.assign(cubeState, newState);
-            moveCount++;
-            document.getElementById('moves').textContent = `${moveCount} moves`;
-            
-            // Animate rotation
-            animateFaceRotation(face, 1);
-            
-            // Check if solved
-            if (isSolved()) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (!bestTime || elapsed < bestTime) {
-                    bestTime = elapsed;
-                    localStorage.setItem('rubik-best-time', bestTime);
-                    updateBestTimeDisplay();
-                }
-                alert(`Solved in ${moveCount} moves and ${formatTime(elapsed)}!`);
-                stopTimer();
-            }
-        }
-
-        function rotateLayer(face, layer, direction) {
-            // Implementasi rotasi layer (untuk interaksi langsung)
-            // Arah: 1 untuk clockwise, -1 untuk counter-clockwise
-            // Ini adalah implementasi sederhana, perlu disesuaikan
-            
-            if (!startTime) startTimer();
-            
-            // Clone current state
-            const newState = JSON.parse(JSON.stringify(cubeState));
-            
-            // Lakukan rotasi sesuai layer yang dipilih
-            // Implementasi lengkap membutuhkan logika yang lebih kompleks
-            
-            // Update cube state
-            Object.assign(cubeState, newState);
-            moveCount++;
-            document.getElementById('moves').textContent = `${moveCount} moves`;
-            
-            // Update display
-            updateCubeDisplay();
-            
-            // Check if solved
-            if (isSolved()) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (!bestTime || elapsed < bestTime) {
-                    bestTime = elapsed;
-                    localStorage.setItem('rubik-best-time', bestTime);
-                    updateBestTimeDisplay();
-                }
-                alert(`Solved in ${moveCount} moves and ${formatTime(elapsed)}!`);
-                stopTimer();
-            }
-        }
-
-        function animateFaceRotation(face, direction) {
-            const cube = document.getElementById('cube');
-            const faceElement = document.getElementById(face);
-              // Setel properti CSS untuk animasi
-            let rotateX = 0, rotateY = 0, rotateZ = 0;
-            
-            switch (face) {
-                case 'F': rotateZ = direction * 90; break;
-                case 'B': rotateZ = direction * -90; break;
-                case 'R': rotateY = direction * 90; break;
-                case 'L': rotateY = direction * -90; break;
-                case 'U': rotateX = direction * -90; break;
-                case 'D': rotateX = direction * 90; break;
-            }
-            
-            faceElement.style.setProperty('--rotate-x', `${rotateX}deg`);
-            faceElement.style.setProperty('--rotate-y', `${rotateY}deg`);
-            faceElement.style.setProperty('--rotate-z', `${rotateZ}deg`);
-            
-            // Tambahkan kelas animasi
-            faceElement.classList.add('rotating');
-            
-            // Setelah animasi selesai, perbarui tampilan dan hapus kelas animasi
-            setTimeout(() => {
-                updateCubeDisplay();
-                faceElement.classList.remove('rotating');
-            }, 300);
-        }
-
-        function updateCubeDisplay() {
-            // Update warna stiker berdasarkan state
-            const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-            
-            faces.forEach(face => {
-                const faceElement = document.getElementById(face);
-                const stickers = faceElement.querySelectorAll('.sticker');
-                
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        const stickerIndex = i * 3 + j;
-                        stickers[stickerIndex].className = `sticker ${cubeState[face][i][j]}`;
-                    }
-                }
-            });
-        }
-
-        function isSolved() {
-            // Check if all faces have uniform color
-            const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-            
-            for (const face of faces) {
-                const firstColor = cubeState[face][0][0];
-                
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        if (cubeState[face][i][j] !== firstColor) {
-                            return false;
-                        }
-                    }
-                }
-            }
-            
-            return true;
+            document.getElementById('cube-scene').style.transform = 
+                `rotateX(${cameraX}deg) rotateY(${cameraY}deg) rotateZ(${cameraZ}deg)`;
         }
 
         function shuffleCube() {
             resetCube();
             
-            const moves = ['F', 'B', 'R', 'L', 'U', 'D'];
+            const layers = ['up', 'down', 'left', 'right', 'front', 'back'];
             const shuffleCount = 20;
             
             let i = 0;
@@ -795,44 +875,141 @@
                     return;
                 }
                 
-                const randomMove = moves[Math.floor(Math.random() * moves.length)];
-                rotateFace(randomMove);
+                const randomLayer = layers[Math.floor(Math.random() * layers.length)];
+                const randomDirection = Math.random() > 0.5 ? 1 : -1;
+                
+                rotateLayer(randomLayer, randomDirection);
                 i++;
-            }, 300);
+            }, 350);
             
             moveCount = 0;
-            document.getElementById('moves').textContent = `${moveCount} moves`;
             startTimer();
+            updateStats();
         }
 
         function solveCube() {
-            // Reset to solved state
             resetCube();
             stopTimer();
-        }
-
+                                                                         }
         function resetCube() {
-            // Reset cube state
-            const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
-            faces.forEach(face => {
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        cubeState[face][i][j] = face;
+            // Reset state ke kondisi terpecahkan
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        if (x === 1 && y === 1 && z === 1) continue;
+                        
+                        cubeState[x][y][z] = {
+                            x, y, z,
+                            colors: {
+                                left: x === 0 ? 'left' : null,
+                                right: x === CUBE_SIZE - 1 ? 'right' : null,
+                                down: y === 0 ? 'down' : null,
+                                up: y === CUBE_SIZE - 1 ? 'up' : null,
+                                back: z === 0 ? 'back' : null,
+                                front: z === CUBE_SIZE - 1 ? 'front' : null
+                            }
+                        };
                     }
                 }
+            }
+            
+            // Reset tampilan
+            const cubies = document.querySelectorAll('.cubie');
+            cubies.forEach(cubie => {
+                cubie.style.transform = `translate3d(${cubie.dataset.x - 1}00%, ${1 - cubie.dataset.y}00%, ${cubie.dataset.z - 1}00%)`;
             });
             
             moveCount = 0;
-            document.getElementById('moves').textContent = `${moveCount} moves`;
+            updateStats();
             updateCubeDisplay();
-            startTimer();
+        }
+
+        function updateCubeDisplay() {
+            // Update warna stiker berdasarkan state terbaru
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        if (x === 1 && y === 1 && z === 1) continue;
+                        
+                        const cubie = cubeState[x][y][z];
+                        const cubieElement = document.querySelector(`.cubie[data-x="${x}"][data-y="${y}"][data-z="${z}"]`);
+                        
+                        if (cubieElement) {
+                            const stickers = cubieElement.querySelectorAll('.sticker');
+                            
+                            stickers.forEach(sticker => {
+                                const face = sticker.dataset.face;
+                                const color = cubie.colors[face];
+                                
+                                if (color) {
+                                    sticker.className = `sticker ${color}`;
+                                    sticker.dataset.face = color;
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        function isSolved() {
+            // Cek setiap sisi apakah warnanya seragam
+            for (const layer of LAYER_NAMES) {
+                let targetColor = null;
+                
+                for (let x = 0; x < CUBE_SIZE; x++) {
+                    for (let y = 0; y < CUBE_SIZE; y++) {
+                        for (let z = 0; z < CUBE_SIZE; z++) {
+                            if (isInLayer(x, y, z, layer)) {
+                                const cubie = cubeState[x][y][z];
+                                
+                                if (cubie.colors[layer]) {
+                                    if (!targetColor) {
+                                        targetColor = cubie.colors[layer];
+                                    } else if (cubie.colors[layer] !== targetColor) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        function showSolvedMessage() {
+            stopTimer();
+            
+            const elapsed = (Date.now() - startTime) / 1000;
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = Math.floor(elapsed % 60);
+            const milliseconds = Math.floor((elapsed % 1) * 100);
+            
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('solve-stats').textContent = 
+                `Anda menyelesaikan kubus dalam ${moveCount} gerakan dan waktu ${timeString}!`;
+            
+            // Update rekor terbaik
+            if (!bestTime || elapsed < bestTime) {
+                bestTime = elapsed;
+                localStorage.setItem('rubik-best-time', bestTime);
+            }
+            
+            if (!bestMoves || moveCount < bestMoves) {
+                bestMoves = moveCount;
+                localStorage.setItem('rubik-best-moves', bestMoves);
+            }
+            
+            document.getElementById('solved-message').style.display = 'flex';
         }
 
         function startTimer() {
             stopTimer();
             startTime = Date.now();
-            updateTimerDisplay();
-            timerInterval = setInterval(updateTimerDisplay, 1000);
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 10);
         }
 
         function stopTimer() {
@@ -841,37 +1018,20 @@
                 timerInterval = null;
             }
         }
-
-        function updateTimerDisplay() {
+        function updateTimer() {
             if (!startTime) return;
             
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const elapsed = (Date.now() - startTime) / 1000;
             const minutes = Math.floor(elapsed / 60);
-            const seconds = elapsed % 60;
+            const seconds = Math.floor(elapsed % 60);
+            const milliseconds = Math.floor((elapsed % 1) * 100);
             
             document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
         }
 
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function updateBestTimeDisplay() {
-            document.getElementById('best-time').textContent = 
-                bestTime ? formatTime(bestTime) : '-';
-        }
-
-        function showHelp() {
-            alert("Cara Bermain:\n\n" +
-                  "1. Klik dan geser untuk memutar pandangan kubus\n" +
-                  "2. Klik pada stiker untuk memilih layer, lalu geser untuk memutar\n" +
-                  "3. Gunakan tombol U, D, L, R, F, B untuk memutar sisi\n" +
-                  "4. Tombol di kanan bawah untuk mengatur pandangan\n\n" +
-                  "U - Up (Atas)\nD - Down (Bawah)\nL - Left (Kiri)\n" +
-                  "R - Right (Kanan)\nF - Front (Depan)\nB - Back (Belakang)");
+        function updateStats() {
+            document.getElementById('moves').textContent = `${moveCount} moves`;
         }
     </script>
 </body>

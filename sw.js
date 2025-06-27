@@ -1,18 +1,11 @@
-const CACHE_NAME = 'rubik-cube-v2';
+const CACHE_NAME = 'rubik-cube-ultimate-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/sounds/move.wav',
-  '/sounds/shuffle.wav',
-  '/sounds/solve.wav',
-  '/sounds/click.wav',
-  '/sounds/complete.wav',
-  '/sounds/error.wav',
-  '/images/icon-192.png',
-  '/images/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap'
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
